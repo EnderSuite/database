@@ -5,6 +5,7 @@ import com.endersuite.database.mysql.ResultHandler;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author TheRealDomm
@@ -19,6 +20,8 @@ public interface Database {
     void disconnect();
 
     boolean isConnected();
+
+    AtomicBoolean getOpenable();
 
     long execUpdate(String sql, Object... replacements);
 

@@ -2,6 +2,7 @@ package com.endersuite.database.mysql;
 
 import com.endersuite.database.Database;
 import com.endersuite.database.configuration.Credentials;
+import lombok.Getter;
 import org.apache.commons.dbcp2.BasicDataSource;
 
 import java.sql.Connection;
@@ -23,7 +24,7 @@ public class MySQLDatabase implements Database {
     protected AtomicBoolean connected = new AtomicBoolean(false);
     private final Credentials credentials;
     private BasicDataSource basicDataSource;
-    private AtomicBoolean openable = new AtomicBoolean(false);
+    @Getter private AtomicBoolean openable = new AtomicBoolean(false);
 
     private Set<Connection> connections = new CopyOnWriteArraySet<>();
 
@@ -42,6 +43,7 @@ public class MySQLDatabase implements Database {
         );
         this.basicDataSource.setUsername(credentials.getUsername());
         this.basicDataSource.setPassword(credentials.getPassword());
+        this.openable.set(true);
         if (credentials.isAutoConnect()) {
             this.connect();
         }
@@ -49,6 +51,9 @@ public class MySQLDatabase implements Database {
 
     @Override
     public void connect() {
+        if (!this.openable.get()) {
+            throw new IllegalStateException("The link to the database can not be established currently...!");
+        }
         Connection connection;
         this.connected.set((connection = this.establish()) != null);
         if (connection != null) {
@@ -65,6 +70,9 @@ public class MySQLDatabase implements Database {
 
     @Override
     public boolean isConnected() {
+        if (!this.openable.get()) {
+            return false;
+        }
         return this.connected.get();
     }
 
@@ -133,6 +141,9 @@ public class MySQLDatabase implements Database {
     }
 
     private Connection establish() {
+        if (!this.openable.get()) {
+            return null;
+        }
         try {
             Connection connection = this.basicDataSource.getConnection();
             this.connections.add(connection);

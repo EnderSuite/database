@@ -23,8 +23,7 @@ public class Row {
     public static final Long DEFAULT_LONG = -1L;
     public static final String DEFAULT_STRING = "";
 
-    @Getter
-    private Map<String, Object> dataSet = new LinkedHashMap<>();
+    @Getter private Map<String, Object> dataSet = new LinkedHashMap<>();
 
     public void add(String colName, Object colData) {
         this.dataSet.put(colName, colData);
@@ -70,7 +69,13 @@ public class Row {
         return DEFAULT_LONG;
     }
 
-
+    public Float getFloat(String name) {
+        Object o = this.dataSet.get(name);
+        if (o instanceof Float) {
+            return (Float) o;
+        }
+        return DEFAULT_FLOAT;
+    }
 
     public String getString(String name) {
         Object o = this.dataSet.get(name);

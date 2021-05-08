@@ -16,8 +16,7 @@ import java.util.List;
  */
 public class ResultHandler {
 
-    @Getter
-    private List<Row> rowList = new ArrayList<>();
+    @Getter private List<Row> rowList = new ArrayList<>();
 
     protected ResultHandler(ResultSet resultSet) {
         if (resultSet == null) {
