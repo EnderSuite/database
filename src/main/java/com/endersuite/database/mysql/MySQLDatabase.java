@@ -2,6 +2,8 @@ package com.endersuite.database.mysql;
 
 import com.endersuite.database.Database;
 import com.endersuite.database.configuration.Credentials;
+import com.endersuite.database.mysql.builder.QueryBuilder;
+import com.endersuite.database.mysql.builder.QueryType;
 import lombok.Getter;
 import org.apache.commons.dbcp2.BasicDataSource;
 
@@ -138,6 +140,26 @@ public class MySQLDatabase implements Database {
     @Override
     public void removeConnection(Connection connection) {
         this.close(connection);
+    }
+
+    @Override
+    public QueryBuilder select(String tokens, String table) {
+        return new QueryBuilder(this, QueryType.SELECT, tokens, table);
+    }
+
+    @Override
+    public QueryBuilder insert(String table) {
+        return new QueryBuilder(this, QueryType.INSERT, table);
+    }
+
+    @Override
+    public QueryBuilder update(String table) {
+        return new QueryBuilder(this, QueryType.UPDATE, table);
+    }
+
+    @Override
+    public QueryBuilder delete(String table) {
+        return new QueryBuilder(this, QueryType.DELETE, table);
     }
 
     private Connection establish() {

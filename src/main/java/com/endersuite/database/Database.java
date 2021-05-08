@@ -1,6 +1,7 @@
 package com.endersuite.database;
 
 import com.endersuite.database.mysql.ResultHandler;
+import com.endersuite.database.mysql.builder.QueryBuilder;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -30,5 +31,13 @@ public interface Database {
     Connection getRawConnection();
 
     void removeConnection(Connection connection);
+
+    QueryBuilder select(String tokens, String table);
+
+    QueryBuilder insert(String table);
+
+    QueryBuilder update(String table);
+
+    QueryBuilder delete(String table);
 
 }
