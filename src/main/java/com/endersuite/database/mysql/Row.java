@@ -5,6 +5,7 @@ import lombok.Getter;
 import lombok.Setter;
 import lombok.ToString;
 
+import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -15,15 +16,7 @@ import java.util.UUID;
  * @since 08.05.2021
  */
 @ToString
-public class Row {
-
-    public static final Boolean DEFAULT_BOOLEAN = false;
-    public static final Byte DEFAULT_BYTE = -1;
-    public static final Integer DEFAULT_INTEGER = -1;
-    public static final Float DEFAULT_FLOAT = -1.0F;
-    public static final Double DEFAULT_DOUBLE = -1.0D;
-    public static final Long DEFAULT_LONG = -1L;
-    public static final String DEFAULT_STRING = "";
+public class Row implements Serializable {
 
     @Getter private final Map<String, Object> dataSet = new LinkedHashMap<>();
     @Getter @Setter private String tableName;
@@ -35,113 +28,113 @@ public class Row {
 
     public Boolean getBoolean(String name) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Boolean) {
+        if (o instanceof Boolean)
             return (Boolean) o;
-        }
-        return DEFAULT_BOOLEAN;
+
+        return null;
     }
 
     public Boolean getBoolean(String name, Boolean def) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Boolean) {
+        if (o instanceof Boolean)
             return (Boolean) o;
-        }
+
         return def;
     }
 
     public Byte getByte(String name) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Byte) {
+        if (o instanceof Byte)
             return (Byte) o;
-        }
-        return DEFAULT_BYTE;
+
+        return null;
     }
 
     public Byte getByte(String name, Byte def) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Byte) {
+        if (o instanceof Byte)
             return (Byte) o;
-        }
+
         return def;
     }
 
     public Integer getInteger(String name) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Integer) {
+        if (o instanceof Integer)
             return (Integer) o;
-        }
-        return DEFAULT_INTEGER;
+
+        return null;
     }
 
     public Integer getInteger(String name, Integer def) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Integer) {
+        if (o instanceof Integer)
             return (Integer) o;
-        }
+
         return def;
     }
 
     public Double getDouble(String name) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Double) {
+        if (o instanceof Double)
             return (Double) o;
-        }
-        return DEFAULT_DOUBLE;
+
+        return null;
     }
 
     public Double getDouble(String name, Double def) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Double) {
+        if (o instanceof Double)
             return (Double) o;
-        }
+
         return def;
     }
 
     public Long getLong(String name) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Long) {
+        if (o instanceof Long)
             return (Long) o;
-        }
-        return DEFAULT_LONG;
+
+        return null;
     }
 
     public Long getLong(String name, Long def) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Long) {
+        if (o instanceof Long)
             return (Long) o;
-        }
+
         return def;
     }
 
     public Float getFloat(String name) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Float) {
+        if (o instanceof Float)
             return (Float) o;
-        }
-        return DEFAULT_FLOAT;
+
+        return null;
     }
 
     public Float getFloat(String name, Float def) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Float) {
+        if (o instanceof Float)
             return (Float) o;
-        }
+
         return def;
     }
 
     public String getString(String name) {
         Object o = this.dataSet.get(name);
-        if (o instanceof String) {
+        if (o instanceof String)
             return (String) o;
-        }
-        return DEFAULT_STRING;
+
+        return null;
     }
 
     public String getString(String name, String def) {
         Object o = this.dataSet.get(name);
-        if (o instanceof String) {
+        if (o instanceof String)
             return (String) o;
-        }
+
         return def;
     }
 
@@ -171,33 +164,33 @@ public class Row {
 
     public Timestamp getTimestamp(String name) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Timestamp) {
-            return (Timestamp)o;
-        }
+        if (o instanceof Timestamp)
+            return (Timestamp) o;
+
         return null;
     }
 
     public Timestamp getTimestamp(String name, Timestamp def) {
         Object o = this.dataSet.get(name);
-        if (o instanceof Timestamp) {
-            return (Timestamp)o;
-        }
+        if (o instanceof Timestamp)
+            return (Timestamp) o;
+
         return def;
     }
 
     public <T> T get(String name, Class<? extends T> clazz) {
         Object o = this.dataSet.get(name);
-        if (o != null) {
+        if (o != null)
             return Primitives.wrap(clazz).cast(o);
-        }
+
         return null;
     }
 
     public <T> T get(String name, Class<? extends T> clazz, T def) {
         Object o = this.dataSet.get(name);
-        if (o != null) {
+        if (o != null)
             return Primitives.wrap(clazz).cast(o);
-        }
+
         return Primitives.wrap(clazz).cast(def);
     }
 
