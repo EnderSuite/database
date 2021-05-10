@@ -4,6 +4,8 @@ import com.endersuite.database.Database;
 import com.endersuite.database.configuration.Credentials;
 import com.endersuite.database.mysql.builder.QueryBuilder;
 import com.endersuite.database.mysql.builder.QueryType;
+import com.google.common.util.concurrent.ListeningExecutorService;
+import com.google.common.util.concurrent.MoreExecutors;
 import lombok.Getter;
 import org.apache.commons.dbcp2.BasicDataSource;
 
@@ -12,8 +14,11 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.Set;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.CopyOnWriteArraySet;
+import java.util.concurrent.Executors;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * @author TheRealDomm
@@ -23,15 +28,15 @@ public class MySQLDatabase implements Database {
 
     private static final String DRIVER_CLASS = "com.mysql.jdbc.Driver";
     private static final String URI = "jdbc:mysql://%s:%d/%s?autoReconnect=false&useSSL=%s";
+    @Getter private final ListeningExecutorService executorService =
+            MoreExecutors.listeningDecorator(Executors.newCachedThreadPool());
     protected AtomicBoolean connected = new AtomicBoolean(false);
-    private final Credentials credentials;
-    private BasicDataSource basicDataSource;
-    @Getter private AtomicBoolean openable = new AtomicBoolean(false);
+    private final BasicDataSource basicDataSource;
+    @Getter private final AtomicBoolean openable = new AtomicBoolean(false);
 
-    private Set<Connection> connections = new CopyOnWriteArraySet<>();
+    private final Set<Connection> connections = new CopyOnWriteArraySet<>();
 
     public MySQLDatabase(Credentials credentials) {
-        this.credentials = credentials;
         this.basicDataSource = new BasicDataSource();
         this.basicDataSource.setDriverClassName(DRIVER_CLASS);
         this.basicDataSource.setUrl(
@@ -130,6 +135,22 @@ public class MySQLDatabase implements Database {
             e.printStackTrace();
         }
         return null;
+    }
+
+    @Override
+    public void asyncUpdate(Consumer<Long> callback, String sql, Object... replacements) {
+        executorService.execute(() -> {
+            Long update = this.execUpdate(sql, replacements);
+            callback.accept(update);
+        });
+    }
+
+    @Override
+    public void asyncQuery(Consumer<ResultHandler> callback, String sql, Object... replacements) {
+        executorService.execute(() -> {
+            ResultHandler resultHandler = this.execQuery(sql, replacements);
+            callback.accept(resultHandler);
+        });
     }
 
     @Override

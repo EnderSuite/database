@@ -3,7 +3,6 @@ package com.endersuite.database.mysql.builder;
 import com.endersuite.database.Database;
 import com.endersuite.database.mysql.ResultHandler;
 import lombok.Getter;
-import lombok.Setter;
 
 import java.sql.Connection;
 import java.sql.PreparedStatement;
@@ -11,6 +10,7 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.function.Consumer;
 
 /**
  * @author TheRealDomm
@@ -26,8 +26,8 @@ public class QueryBuilder {
 
     private QueryOperator queryOperator = QueryOperator.AND;
 
-    private Map<String, Object> values = new LinkedHashMap<>();
-    private Map<String, Object> where = new LinkedHashMap<>();
+    private final Map<String, Object> values = new LinkedHashMap<>();
+    private final Map<String, Object> where = new LinkedHashMap<>();
 
     public QueryBuilder(Database database, QueryType queryType, String table) {
         if (queryType == QueryType.SELECT) {
@@ -46,12 +46,12 @@ public class QueryBuilder {
         this.table = table;
     }
 
-    public QueryBuilder addValue(String colName, Object colData) {
+    public QueryBuilder value(String colName, Object colData) {
         this.values.put(colName, colData);
         return this;
     }
 
-    public QueryBuilder addWhere(String colName, Object colData) {
+    public QueryBuilder where(String colName, Object colData) {
         this.where.put(colName, colData);
         return this;
     }
@@ -61,21 +61,37 @@ public class QueryBuilder {
         return this;
     }
 
-    public void dispatchUpdate() {
+    public void dispatchAsyncUpdate() {
+        this.dispatchAsyncUpdate((ignored) -> {});
+    }
+
+    public void dispatchAsyncUpdate(Consumer<Boolean> callback) {
+        this.database.getExecutorService().execute(() -> {
+            boolean success = this.dispatchUpdate();
+            callback.accept(success);
+        });
+    }
+
+    public void dispatchAsyncQuery(Consumer<ResultHandler> callback) {
+        this.database.getExecutorService().execute(() -> {
+            ResultHandler resultHandler = this.dispatchQuery();
+            callback.accept(resultHandler);
+        });
+    }
+
+    public boolean dispatchUpdate() {
         if (this.queryType == QueryType.SELECT) {
             throw new IllegalStateException("Can not execute update with select query!");
         }
         switch (this.queryType) {
             case INSERT:
-                this.insert();
-                break;
+                return this.insert();
             case UPDATE:
-                this.update();
-                break;
+                return this.update();
             case DELETE:
-                this.delete();
-                break;
+                return this.delete();
         }
+        return false;
     }
 
     public ResultHandler dispatchQuery() {
@@ -84,15 +100,15 @@ public class QueryBuilder {
         }
         String initial = this.queryType.format(this.tokens, this.table);
         Object[] colData = new Object[this.where.size()];
-        String keys = "";
+        StringBuilder keys = new StringBuilder();
         int i = 0;
         for (Map.Entry<String, Object> entry : this.where.entrySet()) {
             colData[i] = entry.getValue();
-            keys += entry.getKey() + " " + this.queryOperator.name() + " ";
+            keys.append(entry.getKey()).append("=? ").append(this.queryOperator.name()).append(" ");
         }
         String query;
-        if (!keys.trim().isEmpty()) {
-            query = initial + " " + keys.substring(0, keys.length()-(2+this.queryOperator.name().length()));
+        if (!keys.toString().trim().isEmpty()) {
+            query = initial + "WHERE " + keys.substring(0, keys.length()-(2+this.queryOperator.name().length()));
         }
         else {
             query = initial;
@@ -116,73 +132,73 @@ public class QueryBuilder {
         return null;
     }
 
-    private void insert() {
+    private boolean insert() {
         String initial = this.queryType.format(this.table);
         Object[] colData = new Object[this.values.size()];
-        String names = "";
-        String data = "";
+        StringBuilder names = new StringBuilder();
+        StringBuilder data = new StringBuilder();
         int i = 0;
         for (Map.Entry<String, Object> entry : this.values.entrySet()) {
             colData[i] = entry.getValue();
-            names += entry.getKey() + ", ";
-            data += "?, ";
+            names.append(entry.getKey()).append(", ");
+            data.append("?, ");
             i++;
         }
-        if (data.trim().isEmpty() || names.trim().isEmpty()) {
+        if (data.toString().trim().isEmpty() || names.toString().trim().isEmpty()) {
             throw new IllegalArgumentException("Can not build query from no arguments!");
         }
-        names = names.substring(0, names.length()-2);
-        data = data.substring(0, data.length()-2);
+        names = new StringBuilder(names.substring(0, names.length() - 2));
+        data = new StringBuilder(data.substring(0, data.length() - 2));
         String query = initial + "(" + names + ") VALUES (" + data + ")";
-        this.execute(colData, query);
+        return this.execute(colData, query);
     }
 
-    private void update() {
+    private boolean update() {
         String initial = this.queryType.format(this.table);
         Object[] colData = new Object[this.values.size()+this.where.size()];
-        String keys = "";
+        StringBuilder keys = new StringBuilder();
         int i = 0;
         for (Map.Entry<String, Object> entry : this.values.entrySet()) {
             colData[i] = entry.getValue();
-            keys += entry.getKey() + "=?, ";
+            keys.append(entry.getKey()).append("=?, ");
             i++;
         }
-        if (keys.trim().isEmpty()) {
+        if (keys.toString().trim().isEmpty()) {
             throw new IllegalArgumentException("Can not build query from no arguments!");
         }
-        keys = keys.substring(0, keys.length()-2);
-        String where = "";
+        keys = new StringBuilder(keys.substring(0, keys.length() - 2));
+        StringBuilder where = new StringBuilder();
         if (!this.where.isEmpty()) {
-            where = " WHERE ";
+            where = new StringBuilder(" WHERE ");
             for (Map.Entry<String, Object> entry : this.where.entrySet()) {
                 colData[i] = entry.getValue();
-                where += entry.getKey() + " " + this.queryOperator.name() + " ";
+                where.append(entry.getKey()).append("=? ").append(this.queryOperator.name()).append(" ");
             }
-            where = where.substring(0, where.length()-(2+this.queryType.name().length()));
+            where = new StringBuilder(where.substring(0, where.length()-(2+this.queryOperator.name().length())));
         }
-        String query = initial + keys + " " + where;
-        this.execute(colData, query);
+        String query = initial + keys + where;
+        return this.execute(colData, query);
     }
 
-    private void delete() {
+    private boolean delete() {
         String initial = this.queryType.format(this.table);
         Object[] colData = new Object[this.where.size()];
-        String keys = "";
+        StringBuilder keys = new StringBuilder();
         int i = 0;
         for (Map.Entry<String, Object> entry : this.where.entrySet()) {
             colData[i] = entry.getValue();
-            keys += entry.getKey() + ", ";
+            keys.append(entry.getKey()).append("=?, ");
             i++;
         }
-        if (keys.trim().isEmpty()) {
+        if (keys.toString().trim().isEmpty()) {
             throw new IllegalArgumentException("Can not build query from no arguments!");
         }
-        keys = keys.substring(0, keys.length()-2);
+        keys = new StringBuilder(keys.substring(0, keys.length() - 2));
         String query = initial + "WHERE " + keys;
-        this.execute(colData, query);
+        return this.execute(colData, query);
     }
 
-    private void execute(Object[] colData, String query) {
+    private boolean execute(Object[] colData, String query) {
         try {
             Connection connection = this.database.getRawConnection();
             if (connection == null) {
@@ -194,9 +210,11 @@ public class QueryBuilder {
             }
             preparedStatement.executeUpdate();
             this.database.removeConnection(connection);
+            return true;
         } catch (SQLException e) {
             e.printStackTrace();
         }
+        return false;
     }
 
 }

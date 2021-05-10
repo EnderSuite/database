@@ -23,7 +23,7 @@ public class Row {
     public static final Long DEFAULT_LONG = -1L;
     public static final String DEFAULT_STRING = "";
 
-    @Getter private Map<String, Object> dataSet = new LinkedHashMap<>();
+    @Getter private final Map<String, Object> dataSet = new LinkedHashMap<>();
 
     public void add(String colName, Object colData) {
         this.dataSet.put(colName, colData);

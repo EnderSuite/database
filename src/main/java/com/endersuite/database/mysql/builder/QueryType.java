@@ -11,15 +11,15 @@ public enum QueryType {
     SELECT("SELECT {0} FROM {1} "),
     INSERT("INSERT INTO {0} "),
     DELETE("DELETE FROM {0} "),
-    UPDATE("UPDATE {0} SET "),;
+    UPDATE("UPDATE {0} SET ");
 
-    private String name;
+    private final String name;
 
     QueryType(String name) {
         this.name = name;
     }
 
-    public String format(String... replacements) {
+    public String format(Object... replacements) {
         return MessageFormat.format(this.name, replacements);
     }
 

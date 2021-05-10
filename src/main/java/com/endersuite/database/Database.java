@@ -2,11 +2,11 @@ package com.endersuite.database;
 
 import com.endersuite.database.mysql.ResultHandler;
 import com.endersuite.database.mysql.builder.QueryBuilder;
+import com.google.common.util.concurrent.ListeningExecutorService;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Consumer;
 
 /**
  * @author TheRealDomm
@@ -15,6 +15,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 public interface Database {
 
     int DEFAULT_UPDATE = -1;
+
+    ListeningExecutorService getExecutorService();
 
     void connect();
 
@@ -27,6 +29,10 @@ public interface Database {
     long execUpdate(String sql, Object... replacements);
 
     ResultHandler execQuery(String sql, Object... replacements);
+
+    void asyncUpdate(Consumer<Long> callback, String sql, Object... replacements);
+
+    void asyncQuery(Consumer<ResultHandler> callback, String sql, Object... replacements);
 
     Connection getRawConnection();
 

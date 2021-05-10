@@ -6,5 +6,5 @@ package com.endersuite.database.mysql.builder;
  */
 public enum QueryOperator {
     AND,
-    OR;
+    OR
 }
