@@ -67,4 +67,11 @@
         </plugins>
     </build>
 
+    <distributionManagement>
+        <repository>
+            <id>endersuite</id>
+            <url>http://artifactory.endersuite.com/artifactory/endersuite-stable/</url>
+        </repository>
+    </distributionManagement>
+
 </project>
