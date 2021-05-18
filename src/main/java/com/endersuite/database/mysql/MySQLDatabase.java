@@ -92,14 +92,14 @@ public class MySQLDatabase implements Database {
             if (connection == null) {
                 throw new IllegalStateException("Failed to establish connection to the database");
             }
-            PreparedStatement preparedStatement = connection.prepareStatement(sql);
+            PreparedStatement preparedStatement = connection.prepareStatement(sql, PreparedStatement.RETURN_GENERATED_KEYS);
             for (int i = 0; i < replacements.length; i++) {
                 preparedStatement.setObject(i+1, replacements[i]);
             }
             preparedStatement.executeUpdate();
             long updateLong = DEFAULT_UPDATE;
             if (preparedStatement.getGeneratedKeys() != null) {
-                ResultSet resultSet = preparedStatement.getResultSet();
+                ResultSet resultSet = preparedStatement.getGeneratedKeys();
                 while (resultSet.next()) {
                     updateLong = resultSet.getLong(1);
                 }
